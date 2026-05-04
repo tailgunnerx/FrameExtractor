@@ -1,4 +1,4 @@
-package com.example.frameextractor
+package com.tailgunnerx.frameextractor
 
 import android.content.ContentValues
 import android.graphics.Bitmap

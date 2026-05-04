@@ -1,4 +1,4 @@
-package com.example.frameextractor.ui.theme
+package com.tailgunnerx.frameextractor.ui.theme
 
 import android.app.Activity
 import android.os.Build

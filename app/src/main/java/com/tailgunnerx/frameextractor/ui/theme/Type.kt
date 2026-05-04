@@ -1,4 +1,4 @@
-package com.example.frameextractor.ui.theme
+package com.tailgunnerx.frameextractor.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

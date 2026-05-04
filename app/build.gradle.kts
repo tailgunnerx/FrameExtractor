@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.frameextractor"
+    namespace = "com.tailgunnerx.frameextractor"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.frameextractor"
+        applicationId = "com.tailgunnerx.frameextractor"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

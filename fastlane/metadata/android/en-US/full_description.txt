@@ -1,0 +1,10 @@
+Frame Extractor is a powerful, lightweight tool designed for high-quality video-to-image extraction. Whether you're a photographer looking for the perfect shot in a 4K video or a developer needing specific frames for a project, this app provides the tools you need.
+
+Features:
+- 🎞️ Frame-by-Frame Precision: Scroll through videos with sub-second accuracy to find exactly what you need.
+- 📸 High-Resolution Exports: Save frames in their original video resolution without quality loss.
+- 📁 Video Library Integration: Quickly browse and select videos from your device's storage.
+- ⚡ Fast & Efficient: Optimized for mobile performance using native Android media APIs.
+- 🔒 100% Private: No tracking, no ads, and no internet permissions. Your videos stay on your device.
+
+Built with Jetpack Compose for a modern, fluid user experience.
