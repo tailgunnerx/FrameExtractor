@@ -6,12 +6,13 @@ plugins {
 android {
     namespace = "com.tailgunnerx.frameextractor"
 
-    compileSdk = 36
+    // IMPORTANT: F-Droid stability sweet spot
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.tailgunnerx.frameextractor"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34
 
         versionCode = 1
         versionName = "1.0"
@@ -40,12 +41,16 @@ android {
 }
 
 dependencies {
+    // Compose BOM (MUST be stable, not bleeding edge)
     implementation(platform(libs.androidx.compose.bom))
+
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
