@@ -123,6 +123,12 @@ fun FrameExtractorApp() {
     val scope = rememberCoroutineScope()
     val retriever = remember { MediaMetadataRetriever() }
 
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(context, "Storage permission required to save frames", Toast.LENGTH_LONG).show()
+        }
+    }
+
     val pickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             videoUri = uri
@@ -326,6 +332,16 @@ fun FrameExtractorApp() {
                         FloatingActionButton(
                             onClick = {
                                 if (isExtracting || currentBitmap == null) return@FloatingActionButton
+                                
+                                // Check for legacy permission on older devices (API 28 and below)
+                                if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.P) {
+                                    val permission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    if (context.checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                        permissionLauncher.launch(permission)
+                                        return@FloatingActionButton
+                                    }
+                                }
+
                                 isExtracting = true
                                 isPlaying = false
                                 scope.launch {
@@ -335,7 +351,8 @@ fun FrameExtractorApp() {
                                         }
                                         Toast.makeText(context, "Saved frame to Pictures!", Toast.LENGTH_SHORT).show()
                                     } catch (e: Exception) {
-                                        Toast.makeText(context, "Error saving frame", Toast.LENGTH_SHORT).show()
+                                        e.printStackTrace()
+                                        Toast.makeText(context, "Error saving frame: ${e.message}", Toast.LENGTH_LONG).show()
                                     } finally {
                                         isExtracting = false
                                     }
@@ -412,13 +429,32 @@ private fun saveBitmapToPictures(context: android.content.Context, bitmap: Bitma
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
         put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/FrameExtractor")
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/FrameExtractor")
+        }
     }
 
-    val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-    if (uri != null) {
-        context.contentResolver.openOutputStream(uri)?.use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-        }
+    val resolver = context.contentResolver
+    val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues) 
+        ?: throw Exception("Failed to create MediaStore entry")
+
+    try {
+        resolver.openOutputStream(uri)?.use { out ->
+            if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
+                throw Exception("Failed to compress bitmap")
+            }
+        } ?: throw Exception("Failed to open output stream")
+
+        // Force the gallery to see the file immediately
+        android.media.MediaScannerConnection.scanFile(
+            context,
+            arrayOf(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_PICTURES).absolutePath + "/FrameExtractor/" + fileName),
+            arrayOf("image/png"),
+            null
+        )
+    } catch (e: Exception) {
+        // Clean up the empty MediaStore entry if writing failed
+        resolver.delete(uri, null, null)
+        throw e
     }
 }
