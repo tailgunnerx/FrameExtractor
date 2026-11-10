@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 // Custom UI Icons built directly so you don't have to download external Google ML/Icon packages!
 val PauseIcon = ImageVector.Builder("Pause", 24.dp, 24.dp, 24f, 24f).apply {
@@ -326,7 +327,7 @@ fun FrameExtractorApp() {
                     Slider(
                         value = currentPositionMs.toFloat(),
                         onValueChange = { 
-                            currentPositionMs = it.toLong() 
+                            currentPositionMs = (it / msPerFrame).roundToLong() * msPerFrame
                             resetFineTuneSlider()
                             isPlaying = false
                         },
@@ -341,8 +342,8 @@ fun FrameExtractorApp() {
                     Slider(
                         value = fineTunePositionOffset.toFloat(),
                         onValueChange = {
-                            fineTunePositionOffset = it.toLong()
-                            currentPositionMs = (fineTunePositionCenter + fineTunePositionOffset).coerceIn(0, videoDurationMs)
+                            fineTunePositionOffset = (it / msPerFrame).roundToLong() * msPerFrame
+                            currentPositionMs = (fineTunePositionCenter + fineTunePositionOffset).coerceIn(0, videoDurationMs / msPerFrame * msPerFrame)
                             isPlaying = false
                         },
                         onValueChangeFinished = {
