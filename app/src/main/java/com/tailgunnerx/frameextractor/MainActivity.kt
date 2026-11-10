@@ -40,6 +40,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 // Custom UI Icons built directly so you don't have to download external Google ML/Icon packages!
 val PauseIcon = ImageVector.Builder("Pause", 24.dp, 24.dp, 24f, 24f).apply {
@@ -321,6 +324,15 @@ fun FrameExtractorApp() {
                         val totalFrames = (videoDurationMs / msPerFrame).toInt() + 1
                         Text("Frame $currentFrame / $totalFrames", color = Color.White, style = MaterialTheme.typography.labelLarge)
                         Text("${playSpeedFps.roundToInt()} FPS Speed", color = Color.Gray, style = MaterialTheme.typography.labelLarge)
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        val timeFormatter = { hours: Long, minutes: Int, seconds: Int, nanoseconds: Int -> String.format(null, "%02d:%02d:%02d.%03d", hours, minutes, seconds, nanoseconds / 1000000) }
+                        val pos = currentPositionMs.toDuration(DurationUnit.MILLISECONDS).toComponents(timeFormatter)
+                        val total = videoDurationMs.toDuration(DurationUnit.MILLISECONDS).toComponents(timeFormatter)
+                        Text("$pos / $total", color = Color.White, style = MaterialTheme.typography.labelLarge)
                     }
 
                     // Main Timeline Slider
