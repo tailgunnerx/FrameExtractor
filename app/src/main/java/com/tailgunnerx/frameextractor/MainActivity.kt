@@ -110,6 +110,9 @@ fun FrameExtractorApp() {
     var videoUri by remember { mutableStateOf<Uri?>(null) }
     var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var currentPositionMs by remember { mutableStateOf(0L) }
+    var fineTunePositionCenter by remember { mutableStateOf(0L) }
+    var fineTunePositionOffset by remember { mutableStateOf(0L) }
+
     var videoDurationMs by remember { mutableStateOf(0L) }
     var isExtracting by remember { mutableStateOf(false) }
 
@@ -123,6 +126,11 @@ fun FrameExtractorApp() {
     val scope = rememberCoroutineScope()
     val retriever = remember { MediaMetadataRetriever() }
 
+    fun resetFineTuneSlider() {
+        fineTunePositionCenter = currentPositionMs
+        fineTunePositionOffset = 0
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (!isGranted) {
             Toast.makeText(context, "Storage permission required to save frames", Toast.LENGTH_LONG).show()
@@ -133,6 +141,7 @@ fun FrameExtractorApp() {
         if (uri != null) {
             videoUri = uri
             currentPositionMs = 0L
+            resetFineTuneSlider()
             isPlaying = false
             retriever.setDataSource(context, uri)
             videoDurationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
@@ -175,6 +184,7 @@ fun FrameExtractorApp() {
                 val delayMs = (1000f / playSpeedFps).toLong()
                 delay(delayMs)
                 currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs)
+                resetFineTuneSlider()
                 if (currentPositionMs >= videoDurationMs) {
                     isPlaying = false
                 }
@@ -193,6 +203,7 @@ fun FrameExtractorApp() {
             delay(400)
             while (true) {
                 currentPositionMs = (currentPositionMs - msPerFrame).coerceAtLeast(0)
+                resetFineTuneSlider()
                 delay((1000f / playSpeedFps).toLong())
             }
         }
@@ -203,6 +214,7 @@ fun FrameExtractorApp() {
             delay(400)
             while (true) {
                 currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs)
+                resetFineTuneSlider()
                 delay((1000f / playSpeedFps).toLong())
             }
         }
@@ -237,6 +249,7 @@ fun FrameExtractorApp() {
                         currentBitmap = null
                         isPlaying = false
                         currentPositionMs = 0L
+                        resetFineTuneSlider()
                         videoDurationMs = 0L
                     },
                     modifier = Modifier.padding(end = 8.dp)
@@ -314,9 +327,28 @@ fun FrameExtractorApp() {
                         value = currentPositionMs.toFloat(),
                         onValueChange = { 
                             currentPositionMs = it.toLong() 
+                            resetFineTuneSlider()
                             isPlaying = false
                         },
                         valueRange = 0f..(if (videoDurationMs > 0) videoDurationMs.toFloat() else 100f),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text("Fine selection:", color = Color.White, style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.align(alignment = Alignment.Start).padding(horizontal = 8.dp)
+                    )
+
+                    Slider(
+                        value = fineTunePositionOffset.toFloat(),
+                        onValueChange = {
+                            fineTunePositionOffset = it.toLong()
+                            currentPositionMs = (fineTunePositionCenter + fineTunePositionOffset).coerceIn(0, videoDurationMs)
+                            isPlaying = false
+                        },
+                        onValueChangeFinished = {
+                            resetFineTuneSlider()
+                        },
+                        valueRange = -10000f..10000f,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -378,7 +410,8 @@ fun FrameExtractorApp() {
                         // Prev Frame
                         IconButton(
                             onClick = { 
-                                currentPositionMs = (currentPositionMs - msPerFrame).coerceAtLeast(0) 
+                                currentPositionMs = (currentPositionMs - msPerFrame).coerceAtLeast(0)
+                                resetFineTuneSlider()
                                 isPlaying = false
                             },
                             interactionSource = prevInteractionSource,
@@ -404,7 +437,8 @@ fun FrameExtractorApp() {
                         // Next Frame
                         IconButton(
                             onClick = { 
-                                currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs) 
+                                currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs)
+                                resetFineTuneSlider()
                                 isPlaying = false
                             },
                             interactionSource = nextInteractionSource,
