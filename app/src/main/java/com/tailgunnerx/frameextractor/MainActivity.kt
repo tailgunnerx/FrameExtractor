@@ -39,6 +39,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 // Custom UI Icons built directly so you don't have to download external Google ML/Icon packages!
 val PauseIcon = ImageVector.Builder("Pause", 24.dp, 24.dp, 24f, 24f).apply {
@@ -110,6 +114,9 @@ fun FrameExtractorApp() {
     var videoUri by remember { mutableStateOf<Uri?>(null) }
     var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var currentPositionMs by remember { mutableStateOf(0L) }
+    var fineTunePositionCenter by remember { mutableStateOf(0L) }
+    var fineTunePositionOffset by remember { mutableStateOf(0L) }
+
     var videoDurationMs by remember { mutableStateOf(0L) }
     var isExtracting by remember { mutableStateOf(false) }
 
@@ -123,6 +130,11 @@ fun FrameExtractorApp() {
     val scope = rememberCoroutineScope()
     val retriever = remember { MediaMetadataRetriever() }
 
+    fun resetFineTuneSlider() {
+        fineTunePositionCenter = currentPositionMs
+        fineTunePositionOffset = 0
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (!isGranted) {
             Toast.makeText(context, "Storage permission required to save frames", Toast.LENGTH_LONG).show()
@@ -133,6 +145,7 @@ fun FrameExtractorApp() {
         if (uri != null) {
             videoUri = uri
             currentPositionMs = 0L
+            resetFineTuneSlider()
             isPlaying = false
             retriever.setDataSource(context, uri)
             videoDurationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
@@ -175,6 +188,7 @@ fun FrameExtractorApp() {
                 val delayMs = (1000f / playSpeedFps).toLong()
                 delay(delayMs)
                 currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs)
+                resetFineTuneSlider()
                 if (currentPositionMs >= videoDurationMs) {
                     isPlaying = false
                 }
@@ -193,6 +207,7 @@ fun FrameExtractorApp() {
             delay(400)
             while (true) {
                 currentPositionMs = (currentPositionMs - msPerFrame).coerceAtLeast(0)
+                resetFineTuneSlider()
                 delay((1000f / playSpeedFps).toLong())
             }
         }
@@ -203,6 +218,7 @@ fun FrameExtractorApp() {
             delay(400)
             while (true) {
                 currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs)
+                resetFineTuneSlider()
                 delay((1000f / playSpeedFps).toLong())
             }
         }
@@ -237,6 +253,7 @@ fun FrameExtractorApp() {
                         currentBitmap = null
                         isPlaying = false
                         currentPositionMs = 0L
+                        resetFineTuneSlider()
                         videoDurationMs = 0L
                     },
                     modifier = Modifier.padding(end = 8.dp)
@@ -308,15 +325,43 @@ fun FrameExtractorApp() {
                         Text("Frame $currentFrame / $totalFrames", color = Color.White, style = MaterialTheme.typography.labelLarge)
                         Text("${playSpeedFps.roundToInt()} FPS Speed", color = Color.Gray, style = MaterialTheme.typography.labelLarge)
                     }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        val timeFormatter = { hours: Long, minutes: Int, seconds: Int, nanoseconds: Int -> String.format(null, "%02d:%02d:%02d.%03d", hours, minutes, seconds, nanoseconds / 1000000) }
+                        val pos = currentPositionMs.toDuration(DurationUnit.MILLISECONDS).toComponents(timeFormatter)
+                        val total = videoDurationMs.toDuration(DurationUnit.MILLISECONDS).toComponents(timeFormatter)
+                        Text("$pos / $total", color = Color.White, style = MaterialTheme.typography.labelLarge)
+                    }
 
                     // Main Timeline Slider
                     Slider(
                         value = currentPositionMs.toFloat(),
                         onValueChange = { 
-                            currentPositionMs = it.toLong() 
+                            currentPositionMs = (it / msPerFrame).roundToLong() * msPerFrame
+                            resetFineTuneSlider()
                             isPlaying = false
                         },
                         valueRange = 0f..(if (videoDurationMs > 0) videoDurationMs.toFloat() else 100f),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text("Fine selection:", color = Color.White, style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.align(alignment = Alignment.Start).padding(horizontal = 8.dp)
+                    )
+
+                    Slider(
+                        value = fineTunePositionOffset.toFloat(),
+                        onValueChange = {
+                            fineTunePositionOffset = (it / msPerFrame).roundToLong() * msPerFrame
+                            currentPositionMs = (fineTunePositionCenter + fineTunePositionOffset).coerceIn(0, videoDurationMs / msPerFrame * msPerFrame)
+                            isPlaying = false
+                        },
+                        onValueChangeFinished = {
+                            resetFineTuneSlider()
+                        },
+                        valueRange = -10000f..10000f,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -378,7 +423,8 @@ fun FrameExtractorApp() {
                         // Prev Frame
                         IconButton(
                             onClick = { 
-                                currentPositionMs = (currentPositionMs - msPerFrame).coerceAtLeast(0) 
+                                currentPositionMs = (currentPositionMs - msPerFrame).coerceAtLeast(0)
+                                resetFineTuneSlider()
                                 isPlaying = false
                             },
                             interactionSource = prevInteractionSource,
@@ -404,7 +450,8 @@ fun FrameExtractorApp() {
                         // Next Frame
                         IconButton(
                             onClick = { 
-                                currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs) 
+                                currentPositionMs = (currentPositionMs + msPerFrame).coerceAtMost(videoDurationMs)
+                                resetFineTuneSlider()
                                 isPlaying = false
                             },
                             interactionSource = nextInteractionSource,
