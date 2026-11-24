@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer Film Strip Frame (stroke width 3) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.2"
+        android:pathData="M34,24 L74,24 A10,10 0 0,1 84,34 L84,74 A10,10 0 0,1 74,84 L34,84 A10,10 0 0,1 24,74 L24,34 A10,10 0 0,1 34,24 Z" />
+
+    <!-- Top and Bottom Film Divider Lines -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M36,24 L36,84 M72,24 L72,84 M36,36 L72,36 M36,72 L72,72" />
+
+    <!-- Left Sprocket Holes -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M28,31 h4 v5 h-4 z M28,41 h4 v5 h-4 z M28,51.5 h4 v5 h-4 z M28,62 h4 v5 h-4 z M28,72 h4 v5 h-4 z" />
+
+    <!-- Right Sprocket Holes -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M76,31 h4 v5 h-4 z M76,41 h4 v5 h-4 z M76,51.5 h4 v5 h-4 z M76,62 h4 v5 h-4 z M76,72 h4 v5 h-4 z" />
+
+    <!-- Center Frame Landscape (Mountains + Sun) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M45,45 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0 z M39,68 L48,55 L54,62 L61,51 L69,68 Z" />
+</vector>

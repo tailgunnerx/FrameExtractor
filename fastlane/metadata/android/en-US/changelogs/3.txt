@@ -1,0 +1,6 @@
+• Added Settings popup menu with optional ±10s Fine Selection slider & millisecond timestamps (PR #6 by @marek-o)
+• High-speed video scrubbing & playback engine (dynamic scaled previewing + instant full-res settle)
+• Background MediaExtractor frame timestamp indexing for exact +1/-1 frame stepping (including 60fps+) & instant pause
+• Full edge-to-edge display ignoring status bar / notch gap (#2)
+• Material You dynamic theme support (#3) & Android 13+ monochrome themed app icon (#4)
+• In-app Changelog & GitHub Repository link
